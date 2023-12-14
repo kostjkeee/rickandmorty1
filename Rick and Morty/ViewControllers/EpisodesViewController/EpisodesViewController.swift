@@ -20,10 +20,9 @@ class EpisodesViewController: UIViewController {
     var isByCharacterName: Bool = false
 
     var episodeItem = [Favourite]()
+    var filteredEpisoedItem = [Favourite]()
     var episodes = [Results]()
-    var filteredEpisodes = [Results]()
-    var characters = [Character]()
-    var filteredCharacters = [Character]()
+    
 
     
     let logoImageView: UIImageView = {
@@ -82,6 +81,7 @@ class EpisodesViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(true)
         DispatchQueue.main.async {
+            self.episodeItem = self.episodeItem.sorted {$0.episodeNumber < $1.episodeNumber}
             self.collectionView.reloadData()
         }
     }
@@ -103,10 +103,11 @@ class EpisodesViewController: UIViewController {
                             let jsonEpisodes = try decoder.decode(Episodes.self, from: safeData)
                             self.episodes = jsonEpisodes.results
                             for episode in self.episodes {
-                                self.fetchCharacter(episode: episode)
-                            }
-                            DispatchQueue.main.async {
-                                self.collectionView.reloadData()
+                                self.fetchCharacter(episode: episode) { character in
+                                    self.episodeItem.append(Favourite(episodeName: episode.name, episodeNumber: episode.episode, character: character!, isFavourite: false))
+//                                    self.episodeItem = self.episodeItem.sorted {$0.episodeNumber < $1.episodeNumber}
+                                }
+
                             }
                         } catch {
                             print("Error parsing json from your Episodes Model: \(error)")
@@ -119,7 +120,7 @@ class EpisodesViewController: UIViewController {
     }
     
     
-    func fetchCharacter(episode: Results) {
+    func fetchCharacter(episode: Results, completionHandler: @escaping (Character?) -> Void) {
         
         let characterArrayMaxAmount = episode.characters.count
         let urlToRandomCharacter = episode.characters[Int.random(in: 0..<characterArrayMaxAmount)]
@@ -140,9 +141,9 @@ class EpisodesViewController: UIViewController {
                         do {
                             let decoder = JSONDecoder()
                             let jsonCharacter = try decoder.decode(Character.self, from: safeData)
-                            
-                            self.characters.append(jsonCharacter)
-                            
+                            DispatchQueue.main.async {
+                                completionHandler(jsonCharacter)
+                            }
                         } catch {
                             print("Error parsing json from your Characters Model: \(error)")
                         }
@@ -241,25 +242,20 @@ class EpisodesViewController: UIViewController {
         
         if isSearching {
             
-            if isByEpisodeName == true || isByEpisodeNumber == true {
-                episodeName = filteredEpisodes[indexPathTapped!.item].name
-                episodeNumber = filteredEpisodes[indexPathTapped!.item].episode
-                character = characters[indexPathTapped!.item]
-            } else if isByCharacterName == true {
-                episodeName = episodes[indexPathTapped!.item].name
-                episodeNumber = episodes[indexPathTapped!.item].episode
-                character = filteredCharacters[indexPathTapped!.item]
-            }
+            episodeName = filteredEpisoedItem[indexPathTapped!.item].episodeName
+            episodeNumber = filteredEpisoedItem[indexPathTapped!.item].episodeNumber
+            character = filteredEpisoedItem[indexPathTapped!.item].character
             
         } else {
-        
-             episodeName = episodes[indexPathTapped!.item].name
-             episodeNumber = episodes[indexPathTapped!.item].episode
-             character = characters[indexPathTapped!.item]
+            
+            episodeName = episodeItem[indexPathTapped!.item].episodeName
+            episodeNumber = episodeItem[indexPathTapped!.item].episodeNumber
+            character = episodeItem[indexPathTapped!.item].character
             
         }
         
         if !EpisodesViewController.indexesUsed.contains(indexPathTapped!.item) {
+            print(indexPathTapped!.item)
             FavouritesViewController.favouriteEpisodes.append(Favourite(episodeName: episodeName, episodeNumber: episodeNumber, character: character, isFavourite: true))
             EpisodesViewController.indexesUsed.append(indexPathTapped!.item)
             
@@ -275,10 +271,10 @@ class EpisodesViewController: UIViewController {
             //ne znayu kak realizovat' bez oshibki index out of range
 //            FavouritesViewController.favouriteEpisodes.remove(at: indexPathTapped!.item)
             
-            EpisodesViewController.isDeleted = true
-            if !EpisodesViewController.indexesUsed.isEmpty {
-                EpisodesViewController.indexesUsed.remove(at: indexPathTapped!.item)
-            }
+//            EpisodesViewController.isDeleted = true
+//            if !EpisodesViewController.indexesUsed.isEmpty {
+//                EpisodesViewController.indexesUsed.remove(at: indexPathTapped!.item)
+//            }
         }
     }
     
@@ -294,13 +290,10 @@ extension EpisodesViewController: UICollectionViewDelegate, UICollectionViewData
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         
         if isSearching {
-            if isByEpisodeName == true || isByEpisodeNumber == true {
-                return filteredEpisodes.count
-            } else if isByCharacterName {
-                return filteredCharacters.count
-            }
+                return filteredEpisoedItem.count
         }
-        return episodes.count
+        
+        return episodeItem.count
     }
     
     
@@ -311,26 +304,21 @@ extension EpisodesViewController: UICollectionViewDelegate, UICollectionViewData
         
         cell.link = self
         
-        var episode: Results
-        var character: Character
+        var item: Favourite!
         
-        if !characters.isEmpty {
-            character = characters[indexPath.item]
-            episode = episodes[indexPath.item]
-            
+        if !episodeItem.isEmpty {
+            item = episodeItem[indexPath.item]
             
             if isSearching {
-                if isByEpisodeName == true || isByEpisodeNumber == true {
-                    episode = filteredEpisodes[indexPath.item]
-                    cell.configure(character: character, episodeText: (episode.name, episode.episode), isFavorite: false)
-                } else if isByCharacterName {
-                    character = filteredCharacters[indexPath.item]
-                    cell.configure(character: character, episodeText: (episode.name, episode.episode), isFavorite: false)
-                }
-            } else {
+//                sortedArray = filteredEpisoedItem.sorted { $0.episodeNumber < $1.episodeNumber}
+                item = filteredEpisoedItem[indexPath.item]
                 
-                cell.configure(character: character, episodeText: (episode.name, episode.episode), isFavorite: false)
+                cell.configure(character: item.character, episodeText: (item.episodeName, item.episodeNumber), isFavorite: false)
+            } else {
+                cell.configure(character: item.character, episodeText: (item.episodeName, item.episodeNumber), isFavorite: false)
             }
+            
+                
             
             if EpisodesViewController.isDeleted == true && EpisodesViewController.index == indexPath.item {
                 cell.isLikeTapped = false
@@ -349,10 +337,10 @@ extension EpisodesViewController: UICollectionViewDelegate, UICollectionViewData
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let vc = DetailViewController()
         
-        if isByCharacterName == true {
-            vc.detailCharacter = filteredCharacters[indexPath.item]
+        if isSearching {
+            vc.detailCharacter = filteredEpisoedItem[indexPath.item].character
         } else {
-            vc.detailCharacter = characters[indexPath.item]
+            vc.detailCharacter = episodeItem[indexPath.item].character
         }
         DispatchQueue.main.async {
             self.navigationController?.pushViewController(vc, animated: true)
@@ -404,7 +392,7 @@ extension EpisodesViewController: UISearchBarDelegate {
     
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        filteredEpisodes.removeAll()
+        filteredEpisoedItem.removeAll()
         let text = searchText
         
         if isByEpisodeNumber {
@@ -413,7 +401,7 @@ extension EpisodesViewController: UISearchBarDelegate {
                 collectionView.reloadData()
             } else {
                 isSearching = true
-                filteredEpisodes = episodes.filter({ $0.episode.lowercased().contains(text.lowercased())})
+                filteredEpisoedItem = episodeItem.filter({ $0.episodeNumber.lowercased().contains(text.lowercased())})
                 collectionView.reloadData()
             }
         } else if isByEpisodeName {
@@ -422,7 +410,7 @@ extension EpisodesViewController: UISearchBarDelegate {
                 collectionView.reloadData()
             } else {
                 isSearching = true
-                filteredEpisodes = episodes.filter({ $0.name.lowercased().contains(text.lowercased())})
+                filteredEpisoedItem = episodeItem.filter({ $0.episodeName.lowercased().contains(text.lowercased())})
                 collectionView.reloadData()
             }
         } else if isByCharacterName {
@@ -431,7 +419,7 @@ extension EpisodesViewController: UISearchBarDelegate {
                 collectionView.reloadData()
             } else {
                 isSearching = true
-                filteredCharacters = characters.filter({ $0.name.lowercased().contains(text.lowercased())})
+                filteredEpisoedItem = episodeItem.filter({ $0.character.name.lowercased().contains(text.lowercased())})
                 collectionView.reloadData()
             }
         }

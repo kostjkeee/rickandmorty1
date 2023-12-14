@@ -57,7 +57,6 @@ class DetailViewController: UIViewController {
         view.backgroundColor = .systemBackground
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(named: "detailicon"), style: .plain, target: nil, action: nil)
         navigationItem.rightBarButtonItem?.tintColor = .black
-        navigationItem.rightBarButtonItem?.isEnabled = false
         tableView.delegate = self
         tableView.dataSource = self
         setupDetailUI()
