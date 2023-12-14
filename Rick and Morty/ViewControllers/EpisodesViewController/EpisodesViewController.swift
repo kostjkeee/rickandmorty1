@@ -9,8 +9,6 @@ import UIKit
 
 class EpisodesViewController: UIViewController {
     
-    
-    let favVC = FavouritesViewController()
     var isSearching = false
     
     static var indexesUsed = [Int]()
@@ -191,6 +189,7 @@ class EpisodesViewController: UIViewController {
         present(ac,animated: true)
     }
 
+    
     private func setupUI() {
         self.view.backgroundColor = .systemBackground
         self.navigationItem.titleView = logoImageView
@@ -229,6 +228,8 @@ class EpisodesViewController: UIViewController {
         ])
     }
     
+    //MARK: - Methods for adding and deleting from favourites
+    
     func addedToFavourites(cell: EpisodesCustomCollectionCell) {
         EpisodesViewController.isDeleted = false
 
@@ -257,8 +258,6 @@ class EpisodesViewController: UIViewController {
              character = characters[indexPathTapped!.item]
             
         }
-        
-        
         
         if !EpisodesViewController.indexesUsed.contains(indexPathTapped!.item) {
             FavouritesViewController.favouriteEpisodes.append(Favourite(episodeName: episodeName, episodeNumber: episodeNumber, character: character, isFavourite: true))
@@ -293,8 +292,6 @@ extension EpisodesViewController: UICollectionViewDelegate, UICollectionViewData
     
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-
-
         
         if isSearching {
             if isByEpisodeName == true || isByEpisodeNumber == true {
@@ -357,8 +354,9 @@ extension EpisodesViewController: UICollectionViewDelegate, UICollectionViewData
         } else {
             vc.detailCharacter = characters[indexPath.item]
         }
-        self.navigationController?.pushViewController(vc, animated: true)
-        
+        DispatchQueue.main.async {
+            self.navigationController?.pushViewController(vc, animated: true)
+        }
     }
     
 }
@@ -369,7 +367,6 @@ extension EpisodesViewController: UICollectionViewDelegate, UICollectionViewData
 extension EpisodesViewController: UICollectionViewDelegateFlowLayout {
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-//        let size = (self.view.frame.width / 2)
         return CGSize(width: 370, height: 357)
     }
     

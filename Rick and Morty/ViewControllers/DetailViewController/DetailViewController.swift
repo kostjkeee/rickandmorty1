@@ -57,6 +57,7 @@ class DetailViewController: UIViewController {
         view.backgroundColor = .systemBackground
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(named: "detailicon"), style: .plain, target: nil, action: nil)
         navigationItem.rightBarButtonItem?.tintColor = .black
+        navigationItem.rightBarButtonItem?.isEnabled = false
         tableView.delegate = self
         tableView.dataSource = self
         setupDetailUI()
@@ -88,7 +89,19 @@ class DetailViewController: UIViewController {
         present(ac,animated: true)
     }
     
-    
+    func getImageForDetailVC() {
+        DispatchQueue.global(qos: .userInitiated).async {
+            guard let imageUrl = URL(string: self.detailCharacter.image),
+                  let data = try? Data(contentsOf: imageUrl),
+                  let imageToLoad = UIImage(data: data) else { return }
+            imageCache.setObject(imageToLoad, forKey: imageUrl.absoluteString as AnyObject)
+            DispatchQueue.main.async {
+                self.userImageView.image = imageToLoad
+                self.removeSpinner()
+            }
+            
+        }
+    }
     
     func addSpinner() {
         self.userImageView.addSubview(spinner)
@@ -190,14 +203,6 @@ class DetailViewController: UIViewController {
     }
 }
     
-    
-    
-    
-    
-    
-    
-    
-
 
 
 //MARK: - TableView Data Source, Delegate 
@@ -240,17 +245,17 @@ extension DetailViewController: UITableViewDelegate, UITableViewDataSource {
     
         let cell = tableView.dequeueReusableCell(withIdentifier: GenderTableCell.identifier)
 
-        DispatchQueue.main.async {
-            self.userNameLabel.text = self.detailCharacter.name
-            self.removeSpinner()
-        }
+        
+        self.userNameLabel.text = self.detailCharacter.name
+        
         
         if let imageFromCache = imageCache.object(forKey: URL(string: detailCharacter.image)!.absoluteString as AnyObject) as? UIImage {
             self.userImageView.image = imageFromCache
             self.removeSpinner()
+        } else {
+            getImageForDetailVC()
         }
         
-              
         return cell!
     }
     
