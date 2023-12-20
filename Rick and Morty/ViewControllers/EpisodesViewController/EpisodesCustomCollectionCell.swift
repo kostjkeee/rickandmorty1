@@ -18,7 +18,6 @@ class EpisodesCustomCollectionCell: UICollectionViewCell {
     let spinner = UIActivityIndicatorView(style: .gray)
     
     var link = EpisodesViewController()
-    var link2 = FavouritesViewController()
     
     var favourite = [Favourite]()
     
@@ -118,7 +117,7 @@ class EpisodesCustomCollectionCell: UICollectionViewCell {
         isLikeTapped = !isLikeTapped
         if isLikeTapped {
             animateLikeButton()
-            print("Like Button Pressed")
+//            print("Like Button Pressed")
             likeButton.setImage(UIImage(systemName: "heart.fill"), for: .normal)
             likeButton.tintColor = UIColor.red
             
@@ -129,7 +128,7 @@ class EpisodesCustomCollectionCell: UICollectionViewCell {
             
         } else {
             animateLikeButton()
-            print("Like Button Unpressed")
+//            print("Like Button Unpressed")
             likeButton.setImage(UIImage(systemName: "heart"), for: .normal)
             likeButton.tintColor = UIColor(red: 1/255, green: 171/255, blue: 196/255, alpha: 1.0)
 
@@ -198,7 +197,6 @@ class EpisodesCustomCollectionCell: UICollectionViewCell {
         self.contentView.layer.cornerRadius = 7
         
         self.contentView.layer.shadowOpacity = 0.5
-//        self.contentView.layer.shadowColor = UIColor.gray.cgColor
         self.contentView.layer.shadowOffset = CGSize(width: 0, height: 1)
         self.contentView.layer.shadowRadius = 1
        

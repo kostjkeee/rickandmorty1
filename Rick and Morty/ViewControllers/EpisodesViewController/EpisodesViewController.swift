@@ -78,6 +78,7 @@ class EpisodesViewController: UIViewController {
     
     }
     
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(true)
         DispatchQueue.main.async {
@@ -105,10 +106,9 @@ class EpisodesViewController: UIViewController {
                             for episode in self.episodes {
                                 self.fetchCharacter(episode: episode) { character in
                                     self.episodeItem.append(Favourite(episodeName: episode.name, episodeNumber: episode.episode, character: character!, isFavourite: false))
-//                                    self.episodeItem = self.episodeItem.sorted {$0.episodeNumber < $1.episodeNumber}
                                 }
-
                             }
+                            
                         } catch {
                             print("Error parsing json from your Episodes Model: \(error)")
                         }
@@ -310,7 +310,6 @@ extension EpisodesViewController: UICollectionViewDelegate, UICollectionViewData
             item = episodeItem[indexPath.item]
             
             if isSearching {
-//                sortedArray = filteredEpisoedItem.sorted { $0.episodeNumber < $1.episodeNumber}
                 item = filteredEpisoedItem[indexPath.item]
                 
                 cell.configure(character: item.character, episodeText: (item.episodeName, item.episodeNumber), isFavorite: false)
@@ -394,14 +393,16 @@ extension EpisodesViewController: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         filteredEpisoedItem.removeAll()
         let text = searchText
-        
+
         if isByEpisodeNumber {
             if text == "" {
                 isSearching = false
                 collectionView.reloadData()
             } else {
                 isSearching = true
-                filteredEpisoedItem = episodeItem.filter({ $0.episodeNumber.lowercased().contains(text.lowercased())})
+            
+                filteredEpisoedItem = episodeItem.filter({ $0.episodeNumber.replacingOccurrences(of: "S01", with: "").lowercased().contains(text.lowercased()) && $0.episodeNumber.replacingOccurrences(of: "S02", with: "").lowercased().contains(text.lowercased())
+                })
                 collectionView.reloadData()
             }
         } else if isByEpisodeName {

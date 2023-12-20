@@ -74,9 +74,16 @@ class FavouritesViewController: UIViewController {
         let indexPathOfCell = collectionView.indexPath(for: cell)
                 
         FavouritesViewController.favouriteEpisodes.remove(at: indexPathOfCell!.item)
+        
         if !EpisodesViewController.indexesUsed.isEmpty {
-            EpisodesViewController.indexesUsed.remove(at: indexPathOfCell!.item)
+            EpisodesViewController.indexesUsed.enumerated().forEach { (index, value) in
+                if index == indexPathOfCell!.item {
+                    EpisodesViewController.indexesUsed.remove(at: index)
+                }
+            }
+            
         }
+        print(EpisodesViewController.indexesUsed)
         EpisodesViewController.isDeleted = true
         EpisodesViewController.index = indexPathOfCell!.item
         FavouritesViewController.save()
